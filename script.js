@@ -9,14 +9,20 @@ const makeGameBoard = () => {
     return {getBoard,setMarker,clearBoard};
 };
 
-const makePlayer = (name,marker) => {{name,marker}};
+const makePlayer = (name,marker) => {
+    const getName = () => name;
+    const getMarker = () => marker;
+    return {getName,getMarker}
+};
 
-const gameController = (() => {
+const makeGameController = (() => {
     const player1 = makePlayer('Player 1','X');
     const player2 = makePlayer('Player 2','O');
     const gameBoard = makeGameBoard();
-    let playerTurn = "X";
+    let playerTurn;
     let winner;
+
+    const getPlayerTurn = () => playerTurn;
 
     const checkWin = () => {
         const board = gameBoard.getBoard();
@@ -40,42 +46,72 @@ const gameController = (() => {
         return false;
     };
 
-    const checkDraw = () => {gameBoard.getBoard().every((value)=>{value!=''});};
+    const checkDraw = () => gameBoard.getBoard().every((value)=>value!='');
 
     const changeTurn = () => {
-        playerTurn = playerTurn === 'X'? 'O':'X';
+        playerTurn = playerTurn === player1? player2:player1;
     }
 
     const playTurn = (choice) => {
         const board = gameBoard.getBoard();
         const index = parseInt(choice);
-         console.log(gameBoard.getBoard())
         if (board[index] == '') {
-            gameBoard.setMarker(playerTurn,index);
-             console.log(gameBoard.getBoard());
-        } else {
-             console.log('Already selected, please choose again')
-            return;
+            gameBoard.setMarker(playerTurn.getMarker(),index);
+        } else if (choice === -1) {
+            return `${playerTurn.getMarker()}'s Turn`;
+        }else {
+            return `Already selected, please choose again (${playerTurn.getMarker()}'s turn)`;
         }
+        if (checkWin()) { return `Winner: ${playerTurn.getName()} (${playerTurn.getMarker()})`; }
 
-        if (checkWin()) {
-             console.log(`winner: ${winner}`);
-            return;
-        }
-
-        if (checkDraw()){
-             console.log('Tis a draw');
-            return;
-        }
+        if (checkDraw()) { return 'Tis a draw'; }
 
         changeTurn();
-         console.log(`${playerTurn}'s Turn`);
+        return `${playerTurn.getMarker()}'s Turn`;
     }
 
     const startGame = () => {
-         console.log(`Begin! ${playerTurn} starts`);
+        playerTurn = Math.random() < 0.5? player1:player2;
     }
-    return {startGame,playTurn};
-})();
 
-gameController.startGame();
+    const newGame = () => {
+        gameBoard.clearBoard();
+        startGame();
+        winner = null;
+    }
+
+    const hasWinner = () => winner;
+    return {startGame,playTurn,getPlayerTurn,newGame,hasWinner};
+});
+
+const displayController = (() => {
+    const gameController = makeGameController();
+    gameController.startGame();
+    let currentTurn = gameController.getPlayerTurn();
+
+    const gameGrid = document.querySelector('.game');
+    const restartBtn = document.querySelector('.restart');
+    const infoPanel = document.querySelector('.info-panel')
+
+    infoPanel.textContent = `${currentTurn.getMarker()}'s Turn`;
+
+    gameGrid.addEventListener('click', (e)=>{
+        if (gameController.hasWinner()){return;}
+        const chosenCell = e.target;
+        const chosenIndex = chosenCell.getAttribute('data-index')-1;
+        infoPanel.textContent = gameController.playTurn(chosenIndex);
+
+        if (chosenCell.className == 'cell' && chosenCell.textContent== '') {
+            chosenCell.textContent = currentTurn.getMarker();
+            currentTurn = gameController.getPlayerTurn();
+        }
+    })
+
+    restartBtn.addEventListener('click', ()=>{
+        const cells = gameGrid.querySelectorAll('.cell');
+        cells.forEach(cell => cell.innerHTML = '');
+        gameController.newGame();
+        currentTurn = gameController.getPlayerTurn();
+        infoPanel.textContent = `${currentTurn.getMarker()}'s Turn`;
+    })
+})();
