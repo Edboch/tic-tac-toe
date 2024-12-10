@@ -12,7 +12,8 @@ const makeGameBoard = () => {
 const makePlayer = (name,marker) => {
     const getName = () => name;
     const getMarker = () => marker;
-    return {getName,getMarker}
+    const setName = (newName) => name=newName;
+    return {getName,getMarker,setName}
 };
 
 const makeGameController = (() => {
@@ -55,19 +56,23 @@ const makeGameController = (() => {
     const playTurn = (choice) => {
         const board = gameBoard.getBoard();
         const index = parseInt(choice);
+        const name = playerTurn.getName();
+        const marker = playerTurn.getMarker();
         if (board[index] == '') {
-            gameBoard.setMarker(playerTurn.getMarker(),index);
+            gameBoard.setMarker(marker,index);
         } else if (choice === -1) {
-            return `${playerTurn.getMarker()}'s Turn`;
+            return `${name}'s (${marker}) Turn`;
         }else {
-            return `Already selected, please choose again (${playerTurn.getMarker()}'s turn)`;
+            return `Already selected, please choose again (${marker}'s turn)`;
         }
-        if (checkWin()) { return `Winner: ${playerTurn.getName()} (${playerTurn.getMarker()})`; }
+        if (checkWin()) { 
+            return `Winner: ${name} (${marker})`;
+        }
 
         if (checkDraw()) { return 'Tis a draw'; }
 
         changeTurn();
-        return `${playerTurn.getMarker()}'s Turn`;
+        return `${name}'s (${marker}) Turn`;
     }
 
     const startGame = () => {
@@ -80,20 +85,49 @@ const makeGameController = (() => {
         winner = null;
     }
 
+    const changePlayerName = (p1,p2) => {
+        if (p1 != '') {
+            player1.setName(p1);
+        }
+        if (p2 != '') {
+            player2.setName(p2);
+        }
+    }
+
     const hasWinner = () => winner;
-    return {startGame,playTurn,getPlayerTurn,newGame,hasWinner};
+    return {startGame,playTurn,getPlayerTurn,
+            newGame,hasWinner,changePlayerName};
 });
 
 const displayController = (() => {
+    const gameGrid = document.querySelector('.game');
+    const infoPanel = document.querySelector('.info-panel')
+    const restartBtn = document.querySelector('.restart');
+    const renameBtn = document.querySelector('.rename');
+    const dialog = document.querySelector('dialog');
+    const playerOneInput = dialog.querySelector('#player-one')
+    const playerTwoInput = dialog.querySelector('#player-two')
+    const submitNamesBtn = dialog.querySelector('.submit-names');
+    const cancelModalBtn = dialog.querySelector('.cancel-modal');
+
     const gameController = makeGameController();
     gameController.startGame();
     let currentTurn = gameController.getPlayerTurn();
+    dialog.showModal();
+    infoPanel.textContent = `${currentTurn.getMarker()}'s starts`;
 
-    const gameGrid = document.querySelector('.game');
-    const restartBtn = document.querySelector('.restart');
-    const infoPanel = document.querySelector('.info-panel')
+    const clearModal = () => {
+        playerOneInput.value = '';
+        playerTwoInput.value = '';
+    }
 
-    infoPanel.textContent = `${currentTurn.getMarker()}'s Turn`;
+    const restartGame = ()=>{
+        const cells = gameGrid.querySelectorAll('.cell');
+        cells.forEach(cell => cell.innerHTML = '');
+        gameController.newGame();
+        currentTurn = gameController.getPlayerTurn();
+        infoPanel.textContent = `${currentTurn.getMarker()}'s Turn`;
+    };
 
     gameGrid.addEventListener('click', (e)=>{
         if (gameController.hasWinner()){return;}
@@ -107,11 +141,23 @@ const displayController = (() => {
         }
     })
 
-    restartBtn.addEventListener('click', ()=>{
-        const cells = gameGrid.querySelectorAll('.cell');
-        cells.forEach(cell => cell.innerHTML = '');
-        gameController.newGame();
-        currentTurn = gameController.getPlayerTurn();
-        infoPanel.textContent = `${currentTurn.getMarker()}'s Turn`;
-    })
+    restartBtn.addEventListener('click', restartGame);
+
+    renameBtn.addEventListener('click', () => {
+        dialog.showModal()
+    });
+
+    cancelModalBtn.addEventListener('click', () => {
+        clearModal();
+        dialog.close();
+    });
+
+    submitNamesBtn.addEventListener('click', () => {
+        const p1Name = playerOneInput.value;
+        const p2Name = playerTwoInput.value;
+        gameController.changePlayerName(p1Name,p2Name);
+        restartGame();
+        clearModal();
+        dialog.close();
+    });
 })();
