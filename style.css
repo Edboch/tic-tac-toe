@@ -2,8 +2,12 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
+    font-family: sans-serif;
 }
 
+:root {
+    font-size: 16px;
+}
 .container {
     height: 100vh;
     display: flex;
@@ -13,6 +17,11 @@
 
 .header {
     margin-top: 30px;
+    font-size: 2rem;
+}
+
+.info-panel {
+    font-size: 2rem;
 }
 
 .content {
@@ -21,7 +30,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 15px;
 }
 
 .game {
@@ -32,4 +41,23 @@
 
 .cell {
     border: 1px solid black;
+    font-size: 5rem;
+    text-align: center;
+}
+
+dialog {
+    width: 350px;
+    height: 150px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+    gap: 5px;
+}
+
+button {
+    padding: 2px 5px;
 }
