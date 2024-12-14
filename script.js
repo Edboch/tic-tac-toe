@@ -72,7 +72,7 @@ const makeGameController = (() => {
         if (checkDraw()) { return 'Tis a draw'; }
 
         changeTurn();
-        return `${name}'s (${marker}) Turn`;
+        return `${playerTurn.getName()}'s (${playerTurn.getMarker()}) Turn`;
     }
 
     const startGame = () => {
